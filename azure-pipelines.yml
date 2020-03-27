@@ -1,0 +1,250 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: checkoutarchive
+
+  jobs:
+  - job: copyandzip
+    steps:
+    - script: |
+        echo ----------------Agent.BuildDirectory: $(Agent.BuildDirectory)----------------
+        cd $(Agent.BuildDirectory)
+        ls -la
+        echo ----------------Pipeline.Workspace: $(Pipeline.Workspace)----------------
+        cd $(Pipeline.Workspace)
+        ls -la
+        echo ----------------System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)----------------
+        cd $(System.DefaultWorkingDirectory)
+        ls -la
+        echo ----------------Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)----------------
+        cd $(Build.ArtifactStagingDirectory)
+        ls -la
+        echo ----------------Build.BinariesDirectory: $(Build.BinariesDirectory)----------------
+        cd $(Build.BinariesDirectory)
+        ls -la
+        echo ----------------Build.SourcesDirectory $(Build.SourcesDirectory)----------------
+        cd $(Build.SourcesDirectory)
+        ls -la
+        echo ----------------Build.StagingDirectory: $(Build.StagingDirectory)----------------
+        cd $(Build.StagingDirectory)
+        ls -la
+        echo ----------------Common.TestResultsDirectory: $(Common.TestResultsDirectory)----------------
+        cd $(Common.TestResultsDirectory)
+        ls -la
+      displayName: directory listings stage1, job1 before script
+
+    - script: |
+        cp *.txt $(Build.BinariesDirectory)
+        echo Build.BinariesDIrectory: $(Build.BinariesDirectory)
+        cd $(Build.BinariesDirectory)
+        ls -al
+      displayName: cp text files
+
+    - publish: $(Build.BinariesDirectory)
+      artifact: txtfiles
+      displayName: Publish txt files
+
+    - script: |
+        echo ----------------Agent.BuildDirectory: $(Agent.BuildDirectory)----------------
+        cd $(Agent.BuildDirectory)
+        ls -la
+        echo ----------------Pipeline.Workspace: $(Pipeline.Workspace)----------------
+        cd $(Pipeline.Workspace)
+        ls -la
+        echo ----------------System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)----------------
+        cd $(System.DefaultWorkingDirectory)
+        ls -la
+        echo ----------------Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)----------------
+        cd $(Build.ArtifactStagingDirectory)
+        ls -la
+        echo ----------------Build.BinariesDirectory: $(Build.BinariesDirectory)----------------
+        cd $(Build.BinariesDirectory)
+        ls -la
+        echo ----------------Build.SourcesDirectory $(Build.SourcesDirectory)----------------
+        cd $(Build.SourcesDirectory)
+        ls -la
+        echo ----------------Build.StagingDirectory: $(Build.StagingDirectory)----------------
+        cd $(Build.StagingDirectory)
+        ls -la
+        echo ----------------Common.TestResultsDirectory: $(Common.TestResultsDirectory)----------------
+        cd $(Common.TestResultsDirectory)
+        ls -la
+      displayName: directory listing stage1, job1 after script
+      
+  - job: zipfiles
+    dependsOn: copyandzip
+    steps:
+    - download: current
+      artifact: txtfiles
+      displayName: Download txt files
+
+    - script: |
+        echo ----------------Agent.BuildDirectory: $(Agent.BuildDirectory)----------------
+        cd $(Agent.BuildDirectory)
+        ls -la
+        echo ----------------Pipeline.Workspace: $(Pipeline.Workspace)----------------
+        cd $(Pipeline.Workspace)
+        ls -la
+        echo ----------------System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)----------------
+        cd $(System.DefaultWorkingDirectory)
+        ls -la
+        echo ----------------Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)----------------
+        cd $(Build.ArtifactStagingDirectory)
+        ls -la
+        echo ----------------Build.BinariesDirectory: $(Build.BinariesDirectory)----------------
+        cd $(Build.BinariesDirectory)
+        ls -la
+        echo ----------------Build.SourcesDirectory $(Build.SourcesDirectory)----------------
+        cd $(Build.SourcesDirectory)
+        ls -la
+        echo ----------------Build.StagingDirectory: $(Build.StagingDirectory)----------------
+        cd $(Build.StagingDirectory)
+        ls -la
+        echo ----------------Common.TestResultsDirectory: $(Common.TestResultsDirectory)----------------
+        cd $(Common.TestResultsDirectory)
+        ls -la
+      displayName: directory listing stage1, job2 before task
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Pipeline.Workspace)/txtfiles'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+      displayName: zip files
+
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      artifact: $(Build.BuildId)
+      displayName: Publish zip file
+
+    - script: |
+        echo ----------------Agent.BuildDirectory: $(Agent.BuildDirectory)----------------
+        cd $(Agent.BuildDirectory)
+        ls -la
+        echo ----------------Pipeline.Workspace: $(Pipeline.Workspace)----------------
+        cd $(Pipeline.Workspace)
+        ls -la
+        echo ----------------System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)----------------
+        cd $(System.DefaultWorkingDirectory)
+        ls -la
+        echo ----------------Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)----------------
+        cd $(Build.ArtifactStagingDirectory)
+        ls -la
+        echo ----------------Build.BinariesDirectory: $(Build.BinariesDirectory)----------------
+        cd $(Build.BinariesDirectory)
+        ls -la
+        echo ----------------Build.SourcesDirectory $(Build.SourcesDirectory)----------------
+        cd $(Build.SourcesDirectory)
+        ls -la
+        echo ----------------Build.StagingDirectory: $(Build.StagingDirectory)----------------
+        cd $(Build.StagingDirectory)
+        ls -la
+        echo ----------------Common.TestResultsDirectory: $(Common.TestResultsDirectory)----------------
+        cd $(Common.TestResultsDirectory)
+        ls -la
+      displayName: directory listing stage1, job2 after task
+
+  
+- stage: publishfeed
+
+  jobs:
+
+  - job: publishtofeed
+    steps:
+    - download: current
+      artifact: $(Build.BuildId)
+      displayName: Download zip file
+    
+        
+    - script: |
+        echo ----------------Agent.BuildDirectory: $(Agent.BuildDirectory)----------------
+        cd $(Agent.BuildDirectory)
+        ls -la
+        echo ----------------Pipeline.Workspace: $(Pipeline.Workspace)----------------
+        cd $(Pipeline.Workspace)
+        ls -la
+        echo ----------------System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)----------------
+        cd $(System.DefaultWorkingDirectory)
+        ls -la
+        echo ----------------Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)----------------
+        cd $(Build.ArtifactStagingDirectory)
+        ls -la
+        echo ----------------Build.BinariesDirectory: $(Build.BinariesDirectory)----------------
+        cd $(Build.BinariesDirectory)
+        ls -la
+        echo ----------------Build.SourcesDirectory $(Build.SourcesDirectory)----------------
+        cd $(Build.SourcesDirectory)
+        ls -la
+        echo ----------------Build.StagingDirectory: $(Build.StagingDirectory)----------------
+        cd $(Build.StagingDirectory)
+        ls -la
+        echo ----------------Common.TestResultsDirectory: $(Common.TestResultsDirectory)----------------
+        cd $(Common.TestResultsDirectory)
+        ls -la
+      displayName: directory listing stage2, job1 after download artifact
+
+    
+    - task: UniversalPackages@0
+      displayName: publish to feed
+      inputs:
+        command: 'publish'
+        publishDirectory: '$(Pipeline.Workspace)/$(Build.BuildId)'
+        feedsToUsePublish: 'internal'
+        vstsFeedPublish: 'ApprovalTest/zipfeed'
+        vstsFeedPackagePublish: '$(Build.BuildId).zip'
+        versionOption: 'patch'
+
+- stage: deploystage
+  jobs:
+  - deployment: DeployDotnet
+    displayName: deploy DOTNET App
+    # creates an environment if it doesn't exist
+    environment: 'TEST'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: |
+              echo ----------------Agent.BuildDirectory: $(Agent.BuildDirectory)----------------
+              cd $(Agent.BuildDirectory)
+              ls -la
+              echo ----------------Pipeline.Workspace: $(Pipeline.Workspace)----------------
+              cd $(Pipeline.Workspace)
+              ls -la
+              echo ----------------System.DefaultWorkingDirectory: $(System.DefaultWorkingDirectory)----------------
+              cd $(System.DefaultWorkingDirectory)
+              ls -la
+              echo ----------------Build.ArtifactStagingDirectory: $(Build.ArtifactStagingDirectory)----------------
+              cd $(Build.ArtifactStagingDirectory)
+              ls -la
+              echo ----------------Build.BinariesDirectory: $(Build.BinariesDirectory)----------------
+              cd $(Build.BinariesDirectory)
+              ls -la
+              echo ----------------Build.SourcesDirectory $(Build.SourcesDirectory)----------------
+              cd $(Build.SourcesDirectory)
+              ls -la
+              echo ----------------Build.StagingDirectory: $(Build.StagingDirectory)----------------
+              cd $(Build.StagingDirectory)
+              ls -la
+              echo ----------------Common.TestResultsDirectory: $(Common.TestResultsDirectory)----------------
+              cd $(Common.TestResultsDirectory)
+              ls -la              
+            displayName: directory listing stage2, deployment job
+          #- task: CopyFilesOverSSH@0
+           # inputs:
+           #   sshEndpoint: 'ssh-test-vm'
+           #   sourceFolder: '$(Pipeline.Workspace)/$(Build.BuildId)'
+           #   contents: '*.zip'
+           #   targetFolder: '/home/kriley'
+            #  readyTimeout: '20000'
+
